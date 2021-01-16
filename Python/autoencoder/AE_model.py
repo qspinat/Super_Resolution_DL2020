@@ -89,4 +89,3 @@ class CDA(nn.Module):
         x = x.view(-1, self.scale*3,self.scale*3)
             
         return x
-    
