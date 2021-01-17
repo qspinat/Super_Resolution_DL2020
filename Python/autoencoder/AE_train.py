@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jan 10 16:02:00 2021
-
-@author: quentin
-"""
-
 import numpy as np
 import torch 
 import torch.nn as nn
@@ -16,9 +8,8 @@ from AE_model import *
 #%% preprocess
 
 # TO DO : 
-#   - create function to give patches from an image
 #   - create funtion that from a dataset of images, gives a dataset of patches
-#   - create function that from patches gives back the entire image (see equ (10) paper)
+#   - upscale LR image with bicubib interpolation
 
 #%% training
 
