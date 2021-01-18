@@ -6,10 +6,10 @@ from common.constants import DEFAULT_INPUT_SIZE
 
 
 class Resize(object):
-  def __init__(self, output_size):
+  def __init__(self, output_size, scale_factor=2):
     assert isinstance(output_size, (int, tuple))
     self.output_size = output_size
-    self.resize_factor = 2
+    self.scale_factor = scale_factor
 
   def __call__(self, sample):
     image, label = sample['image'], sample['label']
@@ -26,7 +26,7 @@ class Resize(object):
     new_h, new_w = int(new_h), int(new_w)
 
     img = transform.resize(image, (new_h, new_w))
-    lbl = transform.resize(label, (self.resize_factor * new_h, self.resize_factor * new_w))
+    lbl = transform.resize(label, (self.scale_factor * new_h, self.scale_factor * new_w))
 
     return {'image': img, 'label': lbl}
 
@@ -67,9 +67,9 @@ class ToTensor(object):
     return {'image': torch.from_numpy(image), 'label': torch.from_numpy(label) }
 
 
-def create_transforms(train_resize=DEFAULT_INPUT_SIZE, test_resize=DEFAULT_INPUT_SIZE):
+def create_transforms(train_resize=DEFAULT_INPUT_SIZE, test_resize=DEFAULT_INPUT_SIZE, scale_factor=2):
   train_transforms = transforms.Compose([
-      RandomCrop(2 * train_resize),
+      RandomCrop(scale_factor * train_resize),
       Resize(train_resize),
       ToTensor(),
   ])
