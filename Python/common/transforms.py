@@ -70,11 +70,11 @@ class ToTensor(object):
 def create_transforms(train_resize=DEFAULT_INPUT_SIZE, test_resize=DEFAULT_INPUT_SIZE, scale_factor=2):
   train_transforms = transforms.Compose([
       RandomCrop(scale_factor * train_resize),
-      Resize(train_resize),
+      Resize(train_resize,scale_factor=scale_factor),
       ToTensor(),
   ])
   test_transforms = transforms.Compose([
-      Resize(test_resize),
+      Resize(test_resize,scale_factor=scale_factor),
       ToTensor(),
   ])
 

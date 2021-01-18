@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import collections
-from AE_model import *
+from .AE_model import *
 
 #%% preprocess
 
@@ -16,10 +16,10 @@ from AE_model import *
 def train_AE(model_AE,train_loader,epoch,log_interval=1000):
     model_AE.train()
     optimizer = optim.Adam(model_AE.parameters())
+    criterion = nn.MSELoss()
     for batch_idx, (data, target) in enumerate(train_loader): #to modify
         optimizer.zero_grad()
         output = model_AE(data)
-        criterion = nn.MSELoss
         loss = criterion(output, data)
         loss.backward()
         optimizer.step()
@@ -32,12 +32,12 @@ def train_AE(model_AE,train_loader,epoch,log_interval=1000):
 def train_mapping(LR_AE,model_mapping,HR_AE,train_loader,epoch,log_interval=1000):
     model_mapping.train()
     optimizer = optim.Adam(model_mapping.parameters())
+    criterion = nn.MSELoss()
     for batch_idx, (data, target) in enumerate(train_loader):
         hl = LR_AE(data,path="encoding")
-        hh = LR_AE(target,path="encoding")
+        hh = HR_AE(target,path="encoding")
         optimizer.zero_grad()
         output = model_mapping(hl)
-        criterion = nn.MSELoss
         loss = criterion(output, hh)
         loss.backward()
         optimizer.step()
@@ -51,10 +51,10 @@ def train_mapping(LR_AE,model_mapping,HR_AE,train_loader,epoch,log_interval=1000
 def fine_tuning(model_CDA,train_loader,epoch,log_interval=1000):
     model_CDA.train()
     optimizer = optim.Adam(model_CDA.parameters())
+    criterion = nn.MSELoss()
     for batch_idx, (data, target) in enumerate(train_loader):
         optimizer.zero_grad()
         output = model_CDA(data)
-        criterion = nn.MSELoss
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
@@ -65,19 +65,28 @@ def fine_tuning(model_CDA,train_loader,epoch,log_interval=1000):
             
     return
             
-def train_global(model_CDA,LR_AE,model_mapping,HR_AE,train_loader,epoch,log_interval=1000):
+def train_global(model_CDA,LR_AE,model_mapping,HR_AE,patch_LR,patch_HR,num_epochs,bs,log_interval=1000):
     
     #step1
     print("LR autoencoder training")
-    train_AE(LR_AE,train_loader,epoch,log_interval=1000)
-    
+    train_dataset = torch.utils.data.TensorDataset(patch_LR,patch_LR)
+    train_loader = torch.utils.data.DataLoader(train_dataset,batch_size=bs)
+    for epoch in range(1,num_epochs+1):
+        train_AE(LR_AE,train_loader,epoch,log_interval=1000)
+
     #step2
     print("HR autoencoder training")
-    train_AE(HR_AE,train_loader,epoch,log_interval=1000)
+    train_dataset = torch.utils.data.TensorDataset(patch_HR,patch_HR)
+    train_loader = torch.utils.data.DataLoader(train_dataset,batch_size=bs)
+    for epoch in range(1,num_epochs+1):
+        train_AE(HR_AE,train_loader,epoch,log_interval=1000)
     
-    #setp3
+    #step3
     print("mapping training")
-    train_mapping(LR_AE,model_mapping,HR_AE,train_loader,epoch,log_interval=1000)
+    train_dataset = torch.utils.data.TensorDataset(patch_LR,patch_HR)
+    train_loader = torch.utils.data.DataLoader(train_dataset,batch_size=bs)
+    for epoch in range(1,num_epochs+1):
+        train_mapping(LR_AE,model_mapping,HR_AE,train_loader,epoch,log_interval=1000)
     
     #step4
     #copy weights from step 1 2 and 3
@@ -89,6 +98,7 @@ def train_global(model_CDA,LR_AE,model_mapping,HR_AE,train_loader,epoch,log_inte
                                            ('dec.bias',HR_AE.dec.bias)
                                                 ]))
     #fine_tuning
-    fine_tuning(model_CDA,train_loader,epoch,log_interval=1000)
+    for epoch in range(1,num_epochs+1):
+      fine_tuning(model_CDA,train_loader,epoch,log_interval=1000)
     
     return
