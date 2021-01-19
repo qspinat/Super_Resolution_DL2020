@@ -6,10 +6,11 @@ from common.constants import DEFAULT_INPUT_SIZE
 
 
 class Resize(object):
-  def __init__(self, output_size, scale_factor=2):
+  def __init__(self, output_size, scale_factor=2, same_size_input_label=False):
     assert isinstance(output_size, (int, tuple))
     self.output_size = output_size
     self.scale_factor = scale_factor
+    self.same_size_input_label = same_size_input_label
 
   def __call__(self, sample):
     image, label = sample['image'], sample['label']
@@ -25,7 +26,9 @@ class Resize(object):
 
     new_h, new_w = int(new_h), int(new_w)
 
-    img = transform.resize(image, (new_h, new_w))
+    img_h = 2 * new_h if self.same_size_input_label else new_h
+    img_w = 2 * new_w if self.same_size_input_label else new_w
+    img = transform.resize(image, (img_h, img_w))
     lbl = transform.resize(label, (self.scale_factor * new_h, self.scale_factor * new_w))
 
     return {'image': img, 'label': lbl}
@@ -67,14 +70,14 @@ class ToTensor(object):
     return {'image': torch.from_numpy(image), 'label': torch.from_numpy(label) }
 
 
-def create_transforms(train_resize=DEFAULT_INPUT_SIZE, test_resize=DEFAULT_INPUT_SIZE, scale_factor=2):
+def create_transforms(train_resize=DEFAULT_INPUT_SIZE, test_resize=DEFAULT_INPUT_SIZE, scale_factor=2, same_size_input_label=False):
   train_transforms = transforms.Compose([
       RandomCrop(scale_factor * train_resize),
-      Resize(train_resize,scale_factor=scale_factor),
+      Resize(train_resize,scale_factor=scale_factor, same_size_input_label=same_size_input_label),
       ToTensor(),
   ])
   test_transforms = transforms.Compose([
-      Resize(test_resize,scale_factor=scale_factor),
+      Resize(test_resize,scale_factor=scale_factor, same_size_input_label=same_size_input_label),
       ToTensor(),
   ])
 
