@@ -70,11 +70,46 @@ class ToTensor(object):
     return {'image': torch.from_numpy(image), 'label': torch.from_numpy(label) }
 
 
+class DownscaleBlurUpscale(object):
+  def __init__(self, kernel_size=3, gaussian_sigma=0.05):
+    self.gaussian_blur = transforms.GaussianBlur(kernel_size, gaussian_sigma)
+
+  def __call__(self, sample):
+    image, label = sample['image'], sample['label']
+    image = image.permute(1,2,0).numpy()
+
+    img_h, img_w = image.shape[:2]
+    image = transform.resize(image, (img_h//2, img_w//2))
+
+    image = Image.fromarray(np.uint8(255 * image / np.max(image)))
+    image = self.gaussian_blur(image)
+    image = np.array(image)
+    
+    image = transform.resize(image, (img_h, img_w))
+    
+    return {'image': torch.from_numpy(image).permute(2,0,1), 'label': label }
+
+
 def create_transforms(train_resize=DEFAULT_INPUT_SIZE, test_resize=DEFAULT_INPUT_SIZE, scale_factor=2, same_size_input_label=False):
   train_transforms = transforms.Compose([
       RandomCrop(scale_factor * train_resize),
       Resize(train_resize,scale_factor=scale_factor, same_size_input_label=same_size_input_label),
       ToTensor(),
+  ])
+  test_transforms = transforms.Compose([
+      Resize(test_resize,scale_factor=scale_factor, same_size_input_label=same_size_input_label),
+      ToTensor(),
+  ])
+
+  return train_transforms, test_transforms
+
+
+def create_transforms_runet(train_resize=DEFAULT_INPUT_SIZE, test_resize=DEFAULT_INPUT_SIZE, scale_factor=2, same_size_input_label=False):
+  train_transforms = transforms.Compose([
+      RandomCrop(scale_factor * train_resize),
+      Resize(train_resize,scale_factor=scale_factor, same_size_input_label=same_size_input_label),
+      ToTensor(),
+      DownscaleBlurUpscale(3, 0.2)
   ])
   test_transforms = transforms.Compose([
       Resize(test_resize,scale_factor=scale_factor, same_size_input_label=same_size_input_label),
