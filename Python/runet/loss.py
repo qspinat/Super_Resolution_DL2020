@@ -21,7 +21,7 @@ def perceptual_loss(Img1,Img2,device=torch.device("cuda:0" if torch.cuda.is_avai
     return loss
     
 def PSNR(Img_pred,Img_true):
-    return 10*torch.log10(torch.max(Img_pred)**2/nn.MSELoss()(Img_pred-Img_true))
+    return 10*torch.log10(torch.max(Img_pred)**2/nn.MSELoss()(Img_pred,Img_true))
 
 def SSIM(Img_pred,Img_true):
     L = torch.max(Img_true)-torch.min(Img_true)
