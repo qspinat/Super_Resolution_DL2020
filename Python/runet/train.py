@@ -6,7 +6,7 @@ from tqdm import tqdm
 from utils.formatter import format_checkpoint_name
 
 
-def train(model, train_dataloader, test_dataloader, criterion, optimizer, n_epochs, log_interval=100):
+def train(model, train_dataloader, test_dataloader, criterion, optimizer, scheduler, n_epochs, log_interval=100):
     best_loss = np.inf
     checkpoint_file = format_checkpoint_name()
     parent_folder = '/'.join(checkpoint_file.split('/')[:-1])
@@ -52,6 +52,7 @@ def train(model, train_dataloader, test_dataloader, criterion, optimizer, n_epoc
             print(f'Test loss: {total_loss}')
             if total_loss < best_loss:
                 best_loss = total_loss
+                print('Saving best model at', checkpoint_file)
                 torch.save(model.state_dict(), checkpoint_file)
-
+        scheduler.step(total_loss)
     return model
