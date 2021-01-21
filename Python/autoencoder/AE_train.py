@@ -13,10 +13,13 @@ from .AE_model import *
 
 #%% training
 
-def train_AE(model_AE,train_loader,epoch,log_interval=1000):
+def train_AE(model_AE,train_loader,epoch,lr=0.01,log_interval=1000,criterion="MSE"):
     model_AE.train()
-    optimizer = optim.Adam(model_AE.parameters())
-    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model_AE.parameters(),lr=lr)
+    if criterion=="MSE":
+        criterion = nn.MSELoss()
+    elif criterion=="perceptual":
+        criterion = VGGPerceptualLoss()
     for batch_idx, (data, target) in enumerate(train_loader): #to modify
         optimizer.zero_grad()
         output = model_AE(data)
@@ -29,10 +32,13 @@ def train_AE(model_AE,train_loader,epoch,log_interval=1000):
                 100. * batch_idx / len(train_loader), loss.data.item()))
     return
 
-def train_mapping(LR_AE,model_mapping,HR_AE,train_loader,epoch,log_interval=1000):
+def train_mapping(LR_AE,model_mapping,HR_AE,train_loader,epoch,lr=0.001,log_interval=1000,criterion="MSE"):
     model_mapping.train()
-    optimizer = optim.Adam(model_mapping.parameters())
-    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model_mapping.parameters(),lr=lr)
+    if criterion=="MSE":
+        criterion = nn.MSELoss()
+    elif criterion=="perceptual":
+        criterion = VGGPerceptualLoss()
     for batch_idx, (data, target) in enumerate(train_loader):
         hl = LR_AE(data,path="encoding")
         hh = HR_AE(target,path="encoding")
@@ -48,10 +54,13 @@ def train_mapping(LR_AE,model_mapping,HR_AE,train_loader,epoch,log_interval=1000
             
     return
             
-def fine_tuning(model_CDA,train_loader,epoch,log_interval=1000):
+def fine_tuning(model_CDA,train_loader,epoch,lr=0.001,log_interval=1000,criterion="MSE"):
     model_CDA.train()
-    optimizer = optim.Adam(model_CDA.parameters())
-    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model_CDA.parameters(),lr=lr)
+    if criterion=="MSE":
+        criterion = nn.MSELoss()
+    elif criterion=="perceptual":
+        criterion = VGGPerceptualLoss()
     for batch_idx, (data, target) in enumerate(train_loader):
         optimizer.zero_grad()
         output = model_CDA(data)
