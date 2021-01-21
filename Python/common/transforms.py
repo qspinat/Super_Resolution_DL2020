@@ -3,6 +3,7 @@ import torch
 from torchvision import transforms
 from skimage import transform
 from common.constants import DEFAULT_INPUT_SIZE
+from PIL import Image
 
 
 class Resize(object):
