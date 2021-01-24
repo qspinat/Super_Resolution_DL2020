@@ -27,10 +27,10 @@ class Resize(object):
 
     new_h, new_w = int(new_h), int(new_w)
 
-    img_h = 2 * new_h if self.same_size_input_label else new_h
-    img_w = 2 * new_w if self.same_size_input_label else new_w
-    img = transform.resize(image, (img_h, img_w))
-    lbl = transform.resize(label, (self.scale_factor * new_h, self.scale_factor * new_w))
+    img = transform.resize(image, (new_h // self.scale_factor, new_w // self.scale_factor))
+    if self.same_size_input_label:
+      img = transform.resize(img, (new_h, new_w))
+    lbl = transform.resize(label, (new_h, new_w))
 
     return {'image': img, 'label': lbl}
 
@@ -72,8 +72,9 @@ class ToTensor(object):
 
 
 class DownscaleBlurUpscale(object):
-  def __init__(self, kernel_size=3, gaussian_sigma=0.05):
-    self.gaussian_blur = transforms.GaussianBlur(kernel_size, gaussian_sigma)
+  def __init__(self, kernel_size=3, gaussian_sigma_max=0.1):
+    self. gaussian_sigma_max = gaussian_sigma_max
+    self.kernel_size=kernel_size
 
   def __call__(self, sample):
     image, label = sample['image'], sample['label']
@@ -82,8 +83,9 @@ class DownscaleBlurUpscale(object):
     img_h, img_w = image.shape[:2]
     image = transform.resize(image, (img_h//2, img_w//2))
 
-    image = Image.fromarray(np.uint8(255 * image / np.max(image)))
-    image = self.gaussian_blur(image)
+    image = torch.FloatTensor(image)
+    gaussian_sigma = np.random.uniform(0.01,self.gaussian_sigma_max)
+    image = transforms.GaussianBlur(self.kernel_size, gaussian_sigma)(image)
     image = np.array(image)
     
     image = transform.resize(image, (img_h, img_w))
