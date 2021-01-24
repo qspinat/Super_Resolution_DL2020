@@ -6,28 +6,31 @@ class InitialBlock(nn.Module):
     def __init__(self, input_size, output_size, kernel_size=7):
         super(InitialBlock, self).__init__()
         padding = int((kernel_size - 1) / 2)
-        self.conv = nn.Conv2d(input_size, output_size, kernel_size=kernel_size, padding=padding)
-        
-        self.bn = nn.BatchNorm2d(output_size)
-        self.relu = nn.ReLU()
+
+        self.layers = nn.Sequential(
+            nn.Conv2d(input_size, output_size, kernel_size=kernel_size, padding=padding),
+            nn.BatchNorm2d(output_size),
+            nn.ReLU()
+        )
 
     def forward(self, x):
-        output = self.relu(self.bn(self.conv(x)))
-        return output
+        return self.layers(x)
 
 
 class ResBlock(nn.Module):
     def __init__(self, input_size, output_size):
         super(ResBlock, self).__init__()
-        self.conv1 = nn.Conv2d(input_size, output_size, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(output_size, output_size, kernel_size=3, padding=1)
-        
-        self.bn = nn.BatchNorm2d(output_size)
-        self.relu = nn.ReLU()
+
+        self.layers = nn.Sequential(
+            nn.Conv2d(input_size, output_size, kernel_size=3, padding=1),
+            nn.BatchNorm2d(output_size),
+            nn.ReLU(),
+            nn.Conv2d(output_size, output_size, kernel_size=3, padding=1),
+            nn.BatchNorm2d(output_size)
+        )
 
     def forward(self, x):
-        output = self.relu(self.bn(self.conv1(x)))
-        output = self.bn(self.conv2(output))
+        output = self.layers(x)
         if output.shape != x.shape:
             return output + torch.cat((x, x), axis=1)
         return x + output
@@ -36,35 +39,35 @@ class ResBlock(nn.Module):
 class RefineBlock(nn.Module):
     def __init__(self, input_size, output_size, upscale_factor=2):
         super(RefineBlock, self).__init__()
-        self.upscale_factor = upscale_factor
-        self.conv1 = nn.Conv2d(input_size, output_size, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(output_size, output_size, kernel_size=3, padding=1)
-        
-        self.bn = nn.BatchNorm2d(input_size)
-        self.relu = nn.ReLU()
-        self.pixelshuffle = nn.PixelShuffle(self.upscale_factor)
+
+        self.layers = nn.Sequential(
+            nn.BatchNorm2d(input_size),
+            nn.Conv2d(input_size, output_size, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(output_size, output_size, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(output_size),
+            nn.PixelShuffle(upscale_factor)
+        )
 
     def forward(self, x):
-        output = self.relu(self.conv1(self.bn(x)))
-        output = self.relu(self.relu(self.conv2(output)))
-        output = self.pixelshuffle(output)
-        return output
+        return self.layers(x)
 
 
 class FinalBlock(nn.Module):
     def __init__(self, input_size, hidden_size, output_size=3):
         super(FinalBlock, self).__init__()
-        self.conv1 = nn.Conv2d(input_size, hidden_size, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(hidden_size, hidden_size, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(hidden_size, output_size, kernel_size=1)
 
-        self.relu = nn.ReLU()
+        self.layers = nn.Sequential(
+            nn.Conv2d(input_size, hidden_size, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(hidden_size, hidden_size, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(hidden_size, output_size, kernel_size=1)
+        )
 
     def forward(self, x):
-        output = self.relu(self.conv1(x))
-        output = self.relu(self.conv2(output))
-        output = self.conv3(output)
-        return output
+        return self.layers(x)
 
 
 class RUNet(nn.Module):
