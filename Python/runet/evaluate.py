@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from autoencoder.loss import SSIM, PSNR, VGGPerceptualLoss
+from common.loss import SSIM, PSNR, VGGPerceptualLoss
 from common.transforms import create_transforms
 from common.dataset import SatelliteDataset
 from common.constants import DATA_ROOT

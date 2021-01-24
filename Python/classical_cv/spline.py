@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from skimage import transform
 from scipy.ndimage import zoom
-from .loss import SSIM,PSNR,VGGPerceptualLoss
+from common.loss import SSIM, PSNR, VGGPerceptualLoss
 
 
 class SplineEvaluation():

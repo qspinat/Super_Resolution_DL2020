@@ -7,9 +7,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from common.constants import DATA_ROOT
 from common.dataset import SatelliteDataset
 from common.transforms import create_transforms_runet, create_transforms
+from common.loss import VGGPerceptualLoss
 from runet.runet import RUNet
 from runet.train import train
-from runet.loss import VGGPerceptualLoss
 
 
 def train_runet(img_size = 64, train_bs = 16, test_bs = 1, lr=0.01, n_epochs=300):
