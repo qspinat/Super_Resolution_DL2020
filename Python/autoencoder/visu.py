@@ -14,7 +14,7 @@ from .AE_preprocess import patch_decomp, patch_recomp
 
 def visu(model_CDA,test_dataset,num_images=5,device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")):
     
-    fig, axes = plt.subplots(nrows=num_images, ncols=3, figsize=(18, 18))
+    fig, axes = plt.subplots(nrows=num_images, ncols=3, figsize=(3*3,3*num_images))
     axes[0,0].set_title('Original image low res')
     axes[0,1].set_title('Super resolution image')
     axes[0,2].set_title('Original image high res')

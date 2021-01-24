@@ -49,17 +49,11 @@ def patch_recomp(patch_list,img_shape):
 
     patch_size = patch_list.shape[-1]
     
-    for i in range(2,img_shape[1]-(patch_size-1)):
-        for j in range(2,img_shape[2]-(patch_size-1)):
+    for i in range(img_shape[1]-(patch_size-1)):
+        for j in range(img_shape[2]-(patch_size-1)):
             img[:,i:i+(patch_size-1)+1,j:j+(patch_size-1)+1] += patch_list[i+j*(img_shape[2]-(patch_size-1)),:,:,:]
             division_factors[:,i:i+(patch_size-1)+1,j:j+(patch_size-1)+1] += 1
     
     img = img/division_factors
     
     return img
-
-
-    
-
-    
-    
