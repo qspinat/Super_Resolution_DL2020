@@ -43,6 +43,6 @@ def visu(model_CDA,test_dataset,num_images=5,device=torch.device("cuda:0" if tor
         axes[i,2].imshow(label.transpose((1,2,0)))
         axes[i,2].axis('off')
     
-    fig.tight_layout()
+    fig.tight_layout(pad=0.25)
     fig.show()
     
