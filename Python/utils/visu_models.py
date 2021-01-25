@@ -1,20 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
 import torch
-from torchvision import utils
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-import os
-from ISR.models import RRDN
 from skimage import transform
-import matplotlib.pyplot as plt
 from autoencoder.AE_preprocess import patch_decomp, patch_recomp
-from common.constants import DRIVE_ROOT, DATA_ROOT, DEFAULT_INPUT_SIZE
-from common.dataset import SatelliteDataset
-from common.transforms import create_transforms
-from runet.runet import RUNet
 
 def visu_all(model_CDA,model_RUNET,model_RRDN,test_dataset,num_images=5,device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),image_id=0):
 
