@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 from skimage import transform
 from .AE_preprocess import patch_decomp, patch_recomp
-from .loss import SSIM,PSNR,VGGPerceptualLoss
+from common.loss import SSIM, PSNR, VGGPerceptualLoss
 
 def test_model(model,test_dataset,scale=2,device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")):
     N = len(test_dataset)

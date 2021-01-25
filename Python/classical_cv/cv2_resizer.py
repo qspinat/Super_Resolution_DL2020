@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from skimage import transform
 import cv2
-from .loss import SSIM,PSNR,VGGPerceptualLoss
+from common.loss import SSIM, PSNR, VGGPerceptualLoss
 
 
 class Cv2ResizerEvaluation():

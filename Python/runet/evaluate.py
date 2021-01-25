@@ -1,52 +1,46 @@
-import os
 import numpy as np
 from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from ISR.models import RRDN
 
-from common.constants import DATA_ROOT, DEFAULT_INPUT_SIZE
-from common.dataset import SatelliteDataset
-from common.transforms import create_transforms
 from common.loss import SSIM, PSNR, VGGPerceptualLoss
+from common.transforms import create_transforms
+from common.dataset import SatelliteDataset
+from common.constants import DATA_ROOT
+from runet.runet import RUNet
 
 
-class RRDNEvaluation:
-    def __init__(self, weights="gans", patch_size=DEFAULT_INPUT_SIZE, scale_factor=2):
-        train_transforms, test_transforms = create_transforms(patch_size, patch_size, scale_factor=scale_factor, same_size_input_label=True)
+class RUNetEvaluation:
+    def __init__(self, img_size=128, scale_factor=2):
+        train_transforms, test_transforms = create_transforms(img_size, img_size, scale_factor=scale_factor, same_size_input_label=True)
         self.train_dataloader = DataLoader(SatelliteDataset(DATA_ROOT, train_transforms, is_training_set=True), 1)
         self.test_dataloader = DataLoader(SatelliteDataset(DATA_ROOT, test_transforms, is_training_set=False), 1)
-        
-        self.rrdn  = RRDN(weights=weights)
 
-    def evaluate(self, evaluate_testset=True):
+        self.model = RUNet().cuda()
+        self.model.eval()
+
+    def evaluate(self, checkpoint, evaluate_testset=True):
         dataloader = self.test_dataloader if evaluate_testset else self.train_dataloader
         MSE = nn.MSELoss()
         perceptual_loss = VGGPerceptualLoss()
 
+        print(f"Loading RUNet weights from {checkpoint}")
+        self.model.load_state_dict(torch.load(checkpoint))
+
         self.list_PSNR, self.list_SSIM, self.list_MSE, self.list_VGG = [], [], [], []
 
         with torch.no_grad():
-            total_loss = 0
-            for sample in tqdm(dataloader):
-                image = sample['image']
-                label = sample["label"]
-                label = label.squeeze().permute(1,2,0)
-                image = image.squeeze().permute(1,2,0) * 255
-
-                output = self.rrdn.predict(image)
-
-                output = transform.resize(output, (label.shape[0], label.shape[1]))
-                output = torch.Tensor(output)
-
-                psnr = PSNR(output, label)
-                ssim = SSIM(output, label)
-                mse = MSE(output, label)
-
-                output = Variable(output).float().cuda().permute(2,0,1).unsqueeze(0)
-                label = Variable(label).float().cuda().permute(2,0,1).unsqueeze(0)
+            for data in tqdm(dataloader):
+                image = Variable(data['image']).float().cuda()
+                label = Variable(data['label']).float().cuda()
+                
+                output = self.model(image)
+                
+                psnr = PSNR(output, label).cpu()
+                ssim = SSIM(output, label).cpu()
+                mse = MSE(output, label).cpu()
                 vgg_loss = perceptual_loss(output, label).cpu()
 
                 self.list_PSNR.append(psnr)
