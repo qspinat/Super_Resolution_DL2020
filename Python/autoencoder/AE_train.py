@@ -6,12 +6,6 @@ import collections
 from common.loss import *
 from .AE_model import *
 
-#%% preprocess
-
-# TO DO : 
-#   - create funtion that from a dataset of images, gives a dataset of patches
-#   - upscale LR image with bicubib interpolation
-
 #%% training
 
 def train_AE(model_AE,train_loader,epoch,lr=0.01,log_interval=1000,criterion="MSE"):

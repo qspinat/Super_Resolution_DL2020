@@ -25,19 +25,7 @@ class SplineEvaluation():
         
         return interpolate_result
 
-    def evaluate_dataset(self, dataset):
-        total_loss = 0
-        for data in tqdm(dataset):
-            image = data['image'].permute(1,2,0).numpy()
-            label = data['label'].permute(1,2,0).numpy()
-
-            interpolated = self.interpolate(image)
-            loss = np.linalg.norm(label - interpolated)
-            total_loss += loss
-
-        print(f'Mean L2 loss on the dataset : {total_loss / len(dataset)}')
-
-    def evaluate_dataset_bis(self, dataset, device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")):
+    def evaluate_dataset(self, dataset, device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")):
         N = len(dataset)
         list_PSNR = np.zeros(N)
         list_SSIM = np.zeros(N)
@@ -54,20 +42,8 @@ class SplineEvaluation():
             img_super = img_super[None,:,:,:].float().to(device)
             label = label.float()[None,:,:,:].to(device)
             list_VGG[i] = VGGPerceptualLoss()(img_super,label).cpu().detach().numpy()
-        
-        res = np.zeros((4,2))
-        res[0,0] = np.mean(list_PSNR)
-        res[1,0] = np.mean(list_SSIM)
-        res[2,0] = np.mean(list_MSE)
-        res[3,0] = np.mean(list_VGG)
-        res[0,1] = np.std(list_PSNR)
-        res[1,1] = np.std(list_SSIM)
-        res[2,1] = np.std(list_MSE)
-        res[3,1] = np.std(list_VGG)
 
-        print("Mean PSNR of {:.03f} on test set with std of {:.03f}".format(res[0,0],res[0,1]))
-        print("Mean SSIM of {:.05f} on test set with std of {:.05f}".format(res[1,0],res[1,1]))
-        print("Mean MSE of {:.07f} on test set with std of {:.07f}".format(res[2,0],res[2,1]))
-        print("Mean VGG-Perceptual of {:.05f} on test set with std of {:.05f}".format(res[3,0],res[3,1]))
-    
-        return res
+        print("Mean PSNR of {:.03f} on test set with std of {:.03f}".format(np.mean(list_PSNR), np.std(list_PSNR)))
+        print("Mean SSIM of {:.05f} on test set with std of {:.05f}".format(np.mean(list_SSIM), np.std(list_SSIM)))
+        print("Mean MSE of {:.07f} on test set with std of {:.07f}".format(np.mean(list_MSE), np.std(list_MSE)))
+        print("Mean VGG-Perceptual of {:.05f} on test set with std of {:.05f}".format(np.mean(list_VGG), np.std(list_VGG)))
